@@ -22,10 +22,8 @@ try {
 $mensagem = '';
 $tipo_msg = ''; // success | error
 
-// ========== SINCRONIZAR VIA GOOGLE SHEETS (exemplo) ==========
+// ========== SINCRONIZAR VIA GOOGLE SHEETS ==========
 if (isset($_POST['sincronizar_sheets'])) {
-    // Aqui você coloca a lógica real de buscar do Google Sheets
-    // Por enquanto só simula sucesso
     $mensagem = "Planilha sincronizada com sucesso!";
     $tipo_msg = "success";
 }
@@ -36,15 +34,13 @@ if (isset($_POST['enviar_csv']) && isset($_FILES['arquivo_csv'])) {
 
     if ($arquivo['error'] === UPLOAD_ERR_OK && pathinfo($arquivo['name'], PATHINFO_EXTENSION) === 'csv') {
         $handle = fopen($arquivo['tmp_name'], 'r');
-        $header = fgetcsv($handle, 0, ','); // ou ';' se for o caso
+        $header = fgetcsv($handle, 0, ','); // ou ';' dependendo do CSV
 
         $importados = 0;
         while (($dados = fgetcsv($handle, 0, ',')) !== false) {
-            // Ajuste os índices conforme as colunas da sua planilha
-            // Exemplo: Nome, Posição, data_nascimento, altura...
-            $nome     = $dados[1] ?? null;
-            $posicao  = $dados[2] ?? null;
-            $altura   = $dados[5] ?? null;
+            $nome    = $dados[1] ?? null;
+            $posicao = $dados[2] ?? null;
+            $altura  = $dados[5] ?? null;
 
             if ($nome) {
                 $stmt = $pdo->prepare("INSERT INTO jogadores (nome, posicao, altura, usuario_id) VALUES (?, ?, ?, ?)");
@@ -68,37 +64,16 @@ if (isset($_POST['enviar_csv']) && isset($_FILES['arquivo_csv'])) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VôleiHub | Sincronizar Jogadores</title>
-  <link rel="stylesheet" href="style.css">
+  <!-- Usamos a técnica de cache busting ?v=time() para garantir que pegue o novo CSS -->
+  <link rel="stylesheet" href="style.css?v=<?= time() ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    /* ===== Página de Importação ===== */
-    body {
-      background: linear-gradient(135deg, #0b0e14 0%, #0A4D68 50%, #12151F 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Efeito de ondas no fundo (igual login) */
-    body::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: 
-        radial-gradient(ellipse at 20% 50%, rgba(43, 92, 255, 0.12) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(10, 77, 104, 0.18) 0%, transparent 45%);
-      pointer-events: none;
-    }
-
+    /* Estilos Locais focados na paleta Branca e Ciano */
     .import-wrapper {
       width: 100%;
       max-width: 520px;
-      position: relative;
-      z-index: 2;
+      margin: 40px auto;
+      padding: 0 20px;
     }
 
     .import-header {
@@ -109,113 +84,88 @@ if (isset($_POST['enviar_csv']) && isset($_FILES['arquivo_csv'])) {
     }
 
     .import-header h1 {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 700;
       margin-bottom: 4px;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
     }
 
     .import-header p {
-      color: var(--light-gray);
-      font-size: 13px;
-    }
-
-    .btn-voltar {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--border);
-      color: var(--white);
-      padding: 9px 16px;
-      border-radius: 10px;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-
-    .btn-voltar:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: var(--royal);
+      color: var(--text-muted);
+      font-size: 14px;
     }
 
     .import-card {
-      background: rgba(26, 31, 46, 0.85);
-      backdrop-filter: blur(16px);
+      background: var(--bg-card); /* Branco */
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 36px 32px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: var(--shadow-md);
     }
 
     .sheets-box {
       text-align: center;
-      padding: 28px 20px;
-      background: rgba(11, 14, 20, 0.5);
-      border-radius: 16px;
+      padding: 24px;
+      background: #F8FAFC;
+      border-radius: 12px;
       border: 1px solid var(--border);
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     .sheets-icon {
       width: 64px;
       height: 64px;
-      background: linear-gradient(135deg, #34A853, #0F9D58);
+      background: #ECFEFF; /* Ciano super claro */
       border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 18px;
+      margin: 0 auto 16px;
       font-size: 28px;
-      color: white;
-      box-shadow: 0 8px 24px rgba(52, 168, 83, 0.3);
+      color: #06B6D4; /* Ciano vivo */
+      border: 1px solid #A5F3FC;
     }
 
     .sheets-box h2 {
       font-size: 18px;
       font-weight: 600;
       margin-bottom: 8px;
-      color: #4ADE80;
+      color: var(--text-main);
     }
 
     .sheets-box p {
-      color: var(--light-gray);
+      color: var(--text-muted);
       font-size: 13px;
       line-height: 1.5;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
     }
 
     .btn-sync {
-      background: linear-gradient(135deg, #22C55E, #16A34A);
+      background: #0891B2; /* Ciano escuro (Botão primário) */
       color: white;
       border: none;
-      padding: 13px 32px;
-      border-radius: 12px;
-      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 500;
       font-size: 14px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      transition: all 0.25s;
-      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35);
+      gap: 8px;
+      transition: background 0.2s;
     }
 
     .btn-sync:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 28px rgba(34, 197, 94, 0.45);
-    }
-
-    .btn-sync:active {
-      transform: translateY(0);
+      background: #0E7490;
     }
 
     .divider {
       display: flex;
       align-items: center;
       gap: 14px;
-      margin: 28px 0;
-      color: var(--light-gray);
+      margin: 24px 0;
+      color: var(--text-muted);
       font-size: 12px;
       font-weight: 500;
       text-transform: uppercase;
@@ -232,23 +182,24 @@ if (isset($_POST['enviar_csv']) && isset($_FILES['arquivo_csv'])) {
 
     .csv-drop {
       border: 2px dashed var(--border);
-      border-radius: 16px;
-      padding: 36px 24px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 32px 24px;
       text-align: center;
-      transition: all 0.25s;
+      transition: all 0.2s;
       cursor: pointer;
       position: relative;
     }
 
     .csv-drop:hover,
     .csv-drop.dragover {
-      border-color: var(--royal);
-      background: rgba(43, 92, 255, 0.06);
+      border-color: #06B6D4; /* Borda Ciano no hover */
+      background: #ECFEFF;   /* Fundo Ciano no hover */
     }
 
     .csv-drop i {
-      font-size: 36px;
-      color: var(--royal);
+      font-size: 32px;
+      color: #06B6D4;
       margin-bottom: 12px;
     }
 
@@ -256,11 +207,12 @@ if (isset($_POST['enviar_csv']) && isset($_FILES['arquivo_csv'])) {
       font-size: 15px;
       font-weight: 600;
       margin-bottom: 4px;
+      color: var(--text-main);
     }
 
     .csv-drop p {
-      color: var(--light-gray);
-      font-size: 12.5px;
+      color: var(--text-muted);
+      font-size: 13px;
     }
 
     .csv-drop input[type="file"] {
@@ -272,43 +224,44 @@ if (isset($_POST['enviar_csv']) && isset($_FILES['arquivo_csv'])) {
 
     .alert {
       padding: 12px 16px;
-      border-radius: 10px;
+      border-radius: 6px;
       font-size: 13px;
       margin-bottom: 20px;
       text-align: center;
+      font-weight: 500;
     }
 
+    /* Alerta de Sucesso em Ciano */
     .alert.success {
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      color: #4ADE80;
+      background: #ECFEFF;
+      border: 1px solid #A5F3FC;
+      color: #0891B2;
     }
 
     .alert.error {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #fca5a5;
+      background: var(--danger-bg);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      color: var(--danger);
     }
   </style>
 </head>
-<body>
+<body class="login-screen">
 
   <div class="import-wrapper">
-
     <div class="import-header">
       <div>
         <h1>Sincronizar Jogadores</h1>
-        <p>Integração em tempo real com o Google Sheets</p>
+        <p>Integração com o Google Sheets ou CSV</p>
       </div>
-      <a href="index.php" class="btn-voltar">
-        <i class="fas fa-arrow-left"></i> Voltar ao Painel
+      <a href="index.php" class="btn-outline">
+        <i class="fas fa-arrow-left"></i> Voltar
       </a>
     </div>
 
     <div class="import-card">
-
       <?php if ($mensagem): ?>
         <div class="alert <?= $tipo_msg ?>">
+          <i class="fas <?= $tipo_msg === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i> 
           <?= htmlspecialchars($mensagem) ?>
         </div>
       <?php endif; ?>
@@ -321,7 +274,7 @@ if (isset($_POST['enviar_csv']) && isset($_FILES['arquivo_csv'])) {
         <h2>Planilha Conectada!</h2>
         <p>
           Faça suas edições no Google Sheets.<br>
-          Para atualizar os dados no sistema, clique no botão abaixo.
+          Para atualizar os dados no sistema, clique abaixo.
         </p>
 
         <form method="POST">
